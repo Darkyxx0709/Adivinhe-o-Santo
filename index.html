@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <title>Desvende o Santo</title>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@900&family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      background: linear-gradient(135deg, #f5f5f5, #dfe9f3);
+      font-family: 'Poppins', sans-serif;
+      color: #333;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+    }
+
+    h1 {
+      font-family: 'Playfair Display', serif;
+      font-size: 3.5rem;
+      font-weight: 900;
+      text-align: center;
+      color: #6b3f2a;
+      text-shadow: 2px 2px 10px rgba(0, 0, 0, 0.1);
+      margin-bottom: 30px;
+      transition: transform 0.3s ease-in-out;
+    }
+
+    h1:hover {
+      transform: scale(1.1);
+    }
+
+    #game {
+      background-color: white;
+      border-radius: 12px;
+      padding: 30px;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      width: 100%;
+      max-width: 600px;
+      text-align: center;
+    }
+
+    input {
+      padding: 12px 20px;
+      font-size: 1.2em;
+      width: 70%;
+      margin-bottom: 20px;
+      border: 2px solid #ccc;
+      border-radius: 8px;
+      transition: border-color 0.3s ease;
+    }
+
+    input:focus {
+      outline: none;
+      border-color: #6b3f2a;
+    }
+
+    button {
+      padding: 12px 25px;
+      font-size: 1.1em;
+      background-color: #6b3f2a;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+    }
+
+    button:hover {
+      background-color: #8b5a2b;
+    }
+
+    #hint {
+      font-size: 1.3em;
+      color: #666;
+      margin-bottom: 15px;
+    }
+
+    #guesses {
+      margin-top: 20px;
+    }
+
+    .guess-row {
+      display: flex;
+      justify-content: center;
+      gap: 10px;
+      margin-bottom: 15px;
+    }
+
+    .letter-box {
+      width: 50px;
+      height: 50px;
+      border-radius: 10px;
+      background-color: #f2f2f2;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.6rem;
+      font-weight: bold;
+      text-transform: uppercase;
+      transition: background-color 0.3s ease, color 0.3s ease;
+    }
+
+    .correct {
+      background-color: #4CAF50;
+      color: white;
+    }
+
+    .partial {
+      background-color: #FFC107;
+      color: white;
+    }
+
+    .wrong {
+      background-color: #e0e0e0;
+      color: #888;
+    }
+
+    #feedback {
+      margin-top: 25px;
+      font-size: 1.4em;
+      font-weight: bold;
+      color: #333;
+    }
+
+    #feedback.success {
+      color: #4CAF50;
+    }
+
+    #feedback.error {
+      color: #FF5722;
+    }
+
+    .button-container {
+      margin-top: 20px;
+    }
+
+    @media (max-width: 768px) {
+      h1 {
+        font-size: 2.5rem;
+      }
+
+      .letter-box {
+        width: 40px;
+        height: 40px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div id="game">
+    <h1>Desvende o Santo</h1>
+    <div id="hint"></div>
+    <input type="text" id="guessInput" placeholder="Digite o nome do santo" maxlength="20" />
+    <button onclick="checkGuess()">Enviar</button>
+    <div id="feedback"></div>
+    <div id="guesses"></div>
+    <div class="button-container">
+      <button onclick="resetGame()">Novo Jogo</button>
+    </div>
+  </div>
+
+  <!-- Sons -->
+  <audio id="correctSound" src="https://cdn.pixabay.com/download/audio/2022/03/15/audio_7b81d63dfc.mp3" preload="auto"></audio>
+  <audio id="wrongSound" src="https://cdn.pixabay.com/download/audio/2021/10/26/audio_3d4da29440.mp3" preload="auto"></audio>
+  <audio id="winSound" src="https://cdn.pixabay.com/download/audio/2022/03/15/audio_ef2d1e4b5b.mp3" preload="auto"></audio>
+
+  <script>
+    const santos = [
+      "Santo Antônio", "São Francisco", "Santa Terezinha", "São João Bosco", "São Pedro",
+      "Santa Clara", "São Judas Tadeu", "São Sebastião", "Santa Luzia", "São Bento",
+      "São Paulo", "São João", "São Tomé", "São Mateus", "São Marcos", "São Lucas", "Santa Rita",
+      "São José", "Santa Catarina", "São Gabriel", "Santa Maria Goretti", "Santa Teresa",
+      "São Roque", "São Nicolau", "São Gregório", "Santa Cecília", "São Miguel",
+      "São Rafael", "São Jerônimo", "Santa Faustina", "São Maximiliano Kolbe", "São João Paulo II",
+      "São Leão", "São Lourenço", "São Martinho", "Santa Helena", "São Bonifácio",
+      "São Clemente", "Santa Mônica", "Santa Rosa de Lima", "São Policarpo", "Santa Águeda", "São Miguel Arcanjo"
+      // Adicione os santos aqui conforme necessário
+    ];
+
+    let santoSecreto = santos[Math.floor(Math.random() * santos.length)].toLowerCase();
+    let tentativas = 0;
+    const maxTentativas = 6;
+
+    document.getElementById('hint').textContent = `O nome do santo tem ${santoSecreto.length} letras (incluindo espaços).`;
+
+    function checkGuess() {
+      const guessInput = document.getElementById("guessInput");
+      const guess = guessInput.value.trim().toLowerCase();
+      if (!guess) return;
+
+      tentativas++;
+      const row = document.createElement("div");
+      row.className = "guess-row";
+
+      for (let i = 0; i < santoSecreto.length; i++) {
+        const box = document.createElement("div");
+        box.className = "letter-box";
+        const letra = guess[i] || "";
+        box.textContent = letra;
+
+        if (letra === santoSecreto[i]) {
+          box.classList.add("correct");
+        } else if (santoSecreto.includes(letra)) {
+          box.classList.add("partial");
+        } else {
+          box.classList.add("wrong");
+        }
+        row.appendChild(box);
+      }
+
+      document.getElementById("guesses").appendChild(row);
+
+      if (guess === santoSecreto) {
+        document.getElementById("feedback").textContent = "Você acertou! Santo revelado!";
+        document.getElementById("feedback").classList.add("success");
+        document.getElementById("winSound").play();
+        document.getElementById("guessInput").disabled = true;
+      } else if (tentativas >= maxTentativas) {
+        document.getElementById("feedback").textContent = `Você perdeu! O santo era: ${santoSecreto}`;
+        document.getElementById("feedback").classList.add("error");
+        document.getElementById("wrongSound").play();
+        document.getElementById("guessInput").disabled = true;
+      } else {
+        document.getElementById("wrongSound").play();
+      }
+
+      guessInput.value = "";
+    }
+
+    function resetGame() {
+      santoSecreto = santos[Math.floor(Math.random() * santos.length)].toLowerCase();
+      tentativas = 0;
+      document.getElementById('hint').textContent = `O nome do santo tem ${santoSecreto.length} letras (incluindo espaços).`;
+      document.getElementById("guesses").innerHTML = "";
+      document.getElementById("feedback").textContent = "";
+      document.getElementById("guessInput").disabled = false;
+      document.getElementById("guessInput").value = "";
+    }
+  </script>
+</body>
+</html>
+
+
