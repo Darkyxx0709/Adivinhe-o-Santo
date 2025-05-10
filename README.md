@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8">
+  <title>Adivinhe o Santo</title>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600&family=Roboto&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --rosa: #ffe6ec;
+      --dourado: #e0c285;
+      --branco: #ffffff;
+      --cinza: #ccc;
+      --verde: #4CAF50;
+      --amarelo: #FFC107;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Roboto', sans-serif;
+      background: linear-gradient(to bottom, var(--rosa), var(--branco));
+      margin: 0;
+      padding: 30px 20px;
+      text-align: center;
+    }
+
+    h1 {
+      font-family: 'Playfair Display', serif;
+      color: #6b4c3b;
+      font-size: 2.5rem;
+      margin-bottom: 10px;
+    }
+
+    p {
+      color: #555;
+      margin-bottom: 20px;
+    }
+
+    input[type="text"] {
+      width: 80%;
+      max-width: 400px;
+      padding: 12px;
+      border-radius: 8px;
+      border: 2px solid var(--dourado);
+      font-size: 1rem;
+      transition: 0.3s;
+    }
+
+    input[type="text"]:focus {
+      outline: none;
+      border-color: #b98b33;
+    }
+
+    button {
+      background-color: var(--dourado);
+      border: none;
+      color: white;
+      padding: 12px 20px;
+      font-size: 1rem;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: background 0.3s;
+      margin-left: 10px;
+    }
+
+    button:hover {
+      background-color: #c49e44;
+    }
+
+    #guesses {
+      margin-top: 30px;
+      animation: fadeIn 0.5s ease-in;
+    }
+
+    .guess-row {
+      display: flex;
+      justify-content: center;
+      margin: 8px 0;
+    }
+
+    .letter {
+      width: 35px;
+      height: 35px;
+      margin: 2px;
+      line-height: 35px;
+      text-align: center;
+      font-weight: bold;
+      border-radius: 6px;
+      font-size: 1.1rem;
+      transition: all 0.3s ease;
+      animation: pop 0.3s ease;
+    }
+
+    .correct { background-color: var(--verde); color: white; }
+    .present { background-color: var(--amarelo); color: black; }
+    .absent  { background-color: var(--cinza); color: black; }
+
+    #result {
+      font-size: 1.2rem;
+      font-weight: bold;
+      color: #444;
+      margin-top: 20px;
+      animation: fadeIn 1s ease;
+    }
+
+    @keyframes pop {
+      0% { transform: scale(0.8); opacity: 0.3; }
+      100% { transform: scale(1); opacity: 1; }
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+  </style>
+</head>
+<body>
+
+  <h1>Adivinhe o Santo</h1>
+  <p>Descubra o nome do santo canonizado (sem acentos ou espaços).</p>
+
+  <input type="text" id="guess-input" placeholder="Ex: franciscodeassis" maxlength="30">
+  <button onclick="submitGuess()">Enviar</button>
+
+  <div id="guesses"></div>
+  <p id="result"></p>
+
+  <script>
+    const santos = [
+      "franciscodeassis", "teresadecalcuta", "joaopauloii", "padrepio", "santaedwiges",
+      "santateresinha", "agostinho", "joaobosco", "saojose", "saoantoniodepadua",
+      "joaodacruz", "santaclara", "joaodamasceno", "martinholutero", "saojosemariaescriva",
+      "santahelena", "santamonica", "santacecilia", "saojude", "santaana",
+      "saojanuario", "saojorgemartir", "santabeatriz", "santafaustina", "saojeronimo",
+      "saojoaobatista", "saojoaomaria", "santacatarina", "santafelicidade", "saojosemarial"
+      // ... continue até ter 200 nomes reais, sem repetir
+    ];
+
+    const santoSecreto = santos[Math.floor(Math.random() * santos.length)];
+    const guessesDiv = document.getElementById("guesses");
+    const resultP = document.getElementById("result");
+
+    function submitGuess() {
+      const input = document.getElementById("guess-input");
+      const guess = input.value.toLowerCase().replace(/[^a-z]/g, "");
+
+      if (!guess || guess.length < 3) return;
+
+      const row = document.createElement("div");
+      row.className = "guess-row";
+
+      for (let i = 0; i < guess.length; i++) {
+        const span = document.createElement("div");
+        span.className = "letter";
+        span.textContent = guess[i];
+
+        if (santoSecreto[i] === guess[i]) {
+          span.classList.add("correct");
+        } else if (santoSecreto.includes(guess[i])) {
+          span.classList.add("present");
+        } else {
+          span.classList.add("absent");
+        }
+
+        row.appendChild(span);
+      }
+
+      guessesDiv.appendChild(row);
+      input.value = "";
+
+      if (guess === santoSecreto) {
+        resultP.innerHTML = `🎉 Parabéns! Você acertou: <strong>${formatarNome(santoSecreto)}</strong>`;
+      } else {
+        resultP.textContent = "";
+      }
+    }
+
+    function formatarNome(nome) {
+      return nome
+        .replace(/sao|santa|santo/, (m) => m[0].toUpperCase() + m.slice(1))
+        .replace(/([a-z])([A-Z])/g, "$1 $2")
+        .replace(/([a-z])([A-Z])/g, "$1 $2")
+        .replace(/([a-z])([A-Z])/g, "$1 $2");
+    }
+  </script>
+</body>
+</html>
+
